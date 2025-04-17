@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Урпэт - Журнал студента</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --danger: #f72585;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: var(--dark);
+        }
+
+        .header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo img {
+            height: 50px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .group-info {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-weight: 500;
+        }
+
+        .logout-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+
+        .days-sidebar {
+            width: 220px;
+            background: white;
+            padding: 2rem 1rem;
+            box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .day-btn {
+            background: white;
+            color: var(--dark);
+            border: 2px solid var(--primary);
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.3s ease;
+            margin-bottom: 0.5rem;
+        }
+
+        .day-btn:hover, .day-btn.active {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+        }
+
+        .schedule-container {
+            flex: 1;
+            padding: 2rem;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(10px);
+        }
+
+        .schedule-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .schedule-title {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            font-weight: 700;
+        }
+
+        .lessons-list {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .lesson-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            border-left: 6px solid var(--accent);
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .lesson-time {
+            font-size: 0.9rem;
+            color: var(--accent);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .lesson-name {
+            font-size: 1.4rem;
+            color: var(--secondary);
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .lesson-info {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.fade-out {
+            animation: fadeOut 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <img src="logo.png" alt="Логотип Урпэт">
+            <h1>Электронный журнал</h1>
+        </div>
+        <div class="user-info">
+            <div class="group-info" id="groupInfo">
+                <i class="fas fa-users"></i>
+                <span id="groupName">Группа: Загрузка...</span>
+            </div>
+            <button class="logout-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Выйти
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <aside class="days-sidebar">
+            <button class="day-btn active" data-day="monday">
+                <i class="fas fa-calendar-day"></i> Понедельник
+            </button>
+            <button class="day-btn" data-day="tuesday">
+                <i class="fas fa-calendar-day"></i> Вторник
+            </button>
+            <button class="day-btn" data-day="wednesday">
+                <i class="fas fa-calendar-day"></i> Среда
+            </button>
+            <button class="day-btn" data-day="thursday">
+                <i class="fas fa-calendar-day"></i> Четверг
+            </button>
+            <button class="day-btn" data-day="friday">
+                <i class="fas fa-calendar-day"></i> Пятница
+            </button>
+            <button class="day-btn" data-day="saturday">
+                <i class="fas fa-calendar-day"></i> Суббота
+            </button>
+        </aside>
+
+        <main class="schedule-container">
+            <div class="schedule-header">
+                <h2 class="schedule-title">Расписание занятий</h2>
+                <div class="date-display" id="currentDate"></div>
+            </div>
+
+            <div class="lessons-list" id="lessonsContainer">
+                <div class="lesson-card">
+                    <div class="lesson-time">Загрузка...</div>
+                    <div class="lesson-name">Идет загрузка расписания</div>
+                    <div class="lesson-info">
+                        <div class="info-item">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Пожалуйста, подождите</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Подключаем SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+    <script>
+        let currentDay = 'monday';
+        const jwtToken = localStorage.getItem('jwtToken');
+        const apiBaseUrl = 'https://localhost:7190'; 
+        
+        if (!jwtToken) {
+            window.location.href = 'index.html';
+        }
+
+        const now = new Date();
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('currentDate').textContent = now.toLocaleDateString('ru-RU', options);
+
+        // Инициализация SignalR соединения
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl(`${apiBaseUrl}/scheduleHub`, {
+                skipNegotiation: true,
+                transport: signalR.HttpTransportType.WebSockets,
+                accessTokenFactory: () => jwtToken
+            })
+            .configureLogging(signalR.LogLevel.Warning)
+            .build();
+
+        // Обработчики SignalR
+        connection.on("ReceiveScheduleUpdate", (dayOfWeek) => {
+            if (dayOfWeek === currentDay) {
+                showNotification(`Расписание обновлено!`);
+                loadSchedule(currentDay);
+            }
+        });
+
+        connection.onclose(async () => {
+            console.log("Connection lost. Trying to reconnect...");
+            await startConnection();
+        });
+
+        async function startConnection() {
+            try {
+                await connection.start();
+                console.log("SignalR connected.");
+
+                const groupId = localStorage.getItem('groupId');
+                if (groupId) {
+                    await connection.invoke("JoinGroup", `group-${groupId}`);
+                }
+            } catch (err) {
+                console.log("SignalR connection error:", err);
+                setTimeout(startConnection, 5000);
+            }
+        }
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.innerHTML = `
+                <i class="fas fa-sync-alt"></i> ${message}
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('fade-out');
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+
+        async function loadGroupInfo() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/student/group`, {
+                    headers: { 
+                        'Authorization': `Bearer ${jwtToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const group = await response.json();
+                    document.getElementById('groupName').textContent = `Группа: ${group.name}`;
+                    localStorage.setItem('groupId', group.id.toString());
+                    
+                    // Присоединяемся к группе SignalR
+                    if (connection.state === signalR.HubConnectionState.Connected) {
+                        await connection.invoke("JoinGroup", `group-${group.id}`);
+                    }
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки данных группы:', error);
+            }
+        }
+
+        async function loadSchedule(day) {
+            const container = document.getElementById('lessonsContainer');
+            container.innerHTML = `
+                <div class="lesson-card">
+                    <div class="lesson-time">Обновление...</div>
+                    <div class="lesson-name">Загрузка расписания</div>
+                    <div class="lesson-info">
+                        <div class="info-item">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Пожалуйста, подождите</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/student/schedule/${day}`, {
+                    headers: { 
+                        'Authorization': `Bearer ${jwtToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const lessons = await response.json();
+                    renderLessons(lessons);
+                } else {
+                    throw new Error('Ошибка загрузки расписания');
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                container.innerHTML = `
+                    <div class="lesson-card">
+                        <div class="lesson-name" style="color: var(--danger);">
+                            <i class="fas fa-exclamation-triangle"></i> Ошибка загрузки
+                        </div>
+                        <div class="lesson-info">
+                            <div class="info-item">
+                                Не удалось загрузить расписание
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function renderLessons(lessons) {
+            const container = document.getElementById('lessonsContainer');
+            
+            if (!lessons || lessons.length === 0) {
+                container.innerHTML = `
+                    <div class="lesson-card">
+                        <div class="lesson-name">
+                            <i class="fas fa-calendar-times"></i> Занятий нет
+                        </div>
+                        <div class="lesson-info">
+                            На этот день занятия не запланированы
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            
+            lessons.forEach((lesson, index) => {
+                const lessonCard = document.createElement('div');
+                lessonCard.className = 'lesson-card';
+                lessonCard.style.animationDelay = `${index * 0.1}s`;
+                lessonCard.innerHTML = `
+                    <div class="lesson-time">${lesson.orderNumber} пара (${getLessonTime(lesson.orderNumber)})</div>
+                    <h3 class="lesson-name">${lesson.subject}</h3>
+                    <div class="lesson-info">
+                        <div class="info-item">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                            <span>${lesson.teacher}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-door-open"></i>
+                            <span>Кабинет: ${lesson.room}</span>
+                        </div>
+                        <div class="info-item">
+                            <i class="fas fa-layer-group"></i>
+                            <span>${lesson.floor} этаж</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(lessonCard);
+            });
+        }
+
+        function getLessonTime(lessonNumber) {
+            const times = {
+                1: '9:00 - 10:30',
+                2: '10:40 - 12:15',
+                3: '13:00 - 14:30',
+                4: '14:40 - 16:10',
+                5: '16:20 - 17:50',
+                6: '18:00 - 19:30'
+            };
+            return times[lessonNumber] || '';
+        }
+
+        async function initApp() {
+            try {
+                // Запускаем соединение SignalR
+                await startConnection();
+                
+                // Загружаем данные
+                await loadGroupInfo();
+                await loadSchedule(currentDay);
+                document.querySelectorAll('.day-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        currentDay = this.dataset.day;
+                        loadSchedule(currentDay);
+                    });
+                });
+                
+                document.getElementById('logoutBtn').addEventListener('click', () => {
+                    if (confirm('Вы уверены, что хотите выйти?')) {
+                        localStorage.removeItem('jwtToken');
+                        localStorage.removeItem('groupId');
+                        connection.stop();
+                        window.location.href = 'index.html';
+                    }
+                });
+                
+            } catch (err) {
+                console.error('Ошибка инициализации:', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
