@@ -4,51 +4,113 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Урпэт - Вход в систему</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        :root {
+            --primary: #3a5fcd;  
+            --secondary: #2c4cad; 
+            --accent: #5d9cec;   
+            --dark: #1e2a4a;    
+            --light: #f8f9fa;    
+            --glass: rgba(255, 255, 255, 0.15); 
+        }
+
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f5f7fa;
-            color: #333;
+            box-sizing: border-box;
         }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            background-color: #2c3e50;
-            color: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #f5f8ff, #e6ecf7);
+            min-height: 100vh;
+            color: var(--dark);
         }
-            
+
         .login-container {
             max-width: 400px;
             margin: 50px auto;
-            padding: 30px;
+            padding: 40px;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(58, 95, 205, 0.1);
+            animation: float 6s ease-in-out infinite;
         }
-        
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .login-container h2 {
+            font-family: 'Playfair Display', serif;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            color: var(--primary);
+            position: relative;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+
         .form-group input {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 15px 20px;
+            background: #f5f8ff;
+            border: 1px solid #d1d9e6;
+            border-radius: 8px;
             font-size: 16px;
+            color: var(--dark);
+            transition: all 0.3s ease;
         }
-        
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(93, 156, 236, 0.2);
+        }
+
         .submit-btn {
             width: 100%;
-            padding: 12px;
-            background-color: #3498db;
+            padding: 15px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(58, 95, 205, 0.3);
+        }
+
+        #errorMessage {
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 500;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        #errorMessage.show {
+            opacity: 1;
         }
     </style>
 </head>
@@ -66,7 +128,7 @@
             </div>
             <button type="submit" class="submit-btn">Войти</button>
         </form>
-        <div id="errorMessage" style="color: red; display: none;"></div>
+        <div id="errorMessage">Неверные учетные данные</div>
     </div>
 
     <script>
@@ -94,9 +156,8 @@
                 }
 
                 const data = await response.json();
-                
-                // Сохраняем токен и перенаправляем
                 localStorage.setItem('jwtToken', data.token);
+                
                 if (data.role === 'student') {
                     window.location.href = 'student.html';
                 } else {
@@ -104,7 +165,10 @@
                 }
             } catch (error) {
                 errorElement.textContent = error.message;
-                errorElement.style.display = 'block';
+                errorElement.classList.add('show');
+                setTimeout(() => {
+                    errorElement.classList.remove('show');
+                }, 3000);
             }
         });
     </script>
