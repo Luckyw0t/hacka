@@ -31,6 +31,49 @@
             color: var(--dark);
         }
 
+        /* Учебная лента */
+        .news-ticker {
+            background: var(--secondary);
+            color: white;
+            padding: 0.5rem 0;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .ticker-container {
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            animation: ticker 30s linear infinite;
+        }
+
+        .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 3rem;
+            font-size: 0.9rem;
+        }
+
+        .ticker-item i {
+            margin-right: 0.5rem;
+            color: var(--accent);
+        }
+
+        .ticker-label {
+            background: var(--primary);
+            padding: 0.2rem 0.8rem;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-right: 0.8rem;
+            font-size: 0.8rem;
+        }
+
+        @keyframes ticker {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
         .header {
             background: linear-gradient(to right, var(--primary), var(--secondary));
             color: white;
@@ -91,7 +134,7 @@
 
         .container {
             display: flex;
-            min-height: calc(100vh - 80px);
+            min-height: calc(100vh - 80px - 38px); /* Учитываем высоту ленты */
         }
 
         .days-sidebar {
@@ -254,6 +297,10 @@
             .schedule-container {
                 padding: 2rem;
             }
+
+            .ticker-container {
+                animation: ticker-mobile 20s linear infinite;
+            }
         }
 
         @media (max-width: 768px) {
@@ -278,10 +325,50 @@
                 align-items: flex-start;
                 gap: 1.5rem;
             }
+
+            .ticker-item {
+                font-size: 0.8rem;
+                margin-right: 2rem;
+            }
+
+            .ticker-label {
+                padding: 0.1rem 0.6rem;
+                margin-right: 0.5rem;
+            }
+
+            @keyframes ticker-mobile {
+                0% { transform: translateX(100%); }
+                100% { transform: translateX(-200%); }
+            }
         }
     </style>
 </head>
 <body>
+    <div class="news-ticker">
+        <div class="ticker-container" id="tickerContainer">
+            <div class="ticker-item">
+                <span class="ticker-label">ВАЖНО</span>
+                <i class="fas fa-exclamation-circle"></i>
+                <span>Завтра собрание в 10:00 в актовом зале</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">НОВОСТЬ</span>
+                <i class="fas fa-newspaper"></i>
+                <span>Опубликованы новые методические материалы</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">НАПОМИНАНИЕ</span>
+                <i class="fas fa-bell"></i>
+                <span>Срок сдачи проекта по БД - до 15 декабря</span>
+            </div>
+            <div class="ticker-item">
+                <span class="ticker-label">ОБЪЯВЛЕНИЕ</span>
+                <i class="fas fa-bullhorn"></i>
+                <span>Конкурс студенческих работ стартует 1 ноября</span>
+            </div>
+        </div>
+    </div>
+
     <header class="header">
         <div class="logo">
             <img src="logo.png" alt="Логотип Урпэт">
@@ -339,20 +426,75 @@
     <!-- Подключаем SignalR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
     <script>
-        // Глобальные переменные
         let currentDay = 'monday';
         const jwtToken = localStorage.getItem('jwtToken');
         const apiBaseUrl = 'https://localhost:7190';
         
-        // Проверка аутентификации
         if (!jwtToken) {
             window.location.href = 'index.html';
         }
 
-        // Установка текущей даты
         const now = new Date();
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         document.getElementById('currentDate').textContent = now.toLocaleDateString('ru-RU', options);
+
+        // Загрузка новостной ленты
+        async function loadTickerNews() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/news/ticker`, {
+                    headers: { 
+                        'Authorization': `Bearer ${jwtToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const news = await response.json();
+                    updateTicker(news);
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки новостей:', error);
+                // Оставляем стандартные сообщения, если не удалось загрузить
+            }
+        }
+
+        function updateTicker(newsItems) {
+            const container = document.getElementById('tickerContainer');
+            container.innerHTML = '';
+            
+            newsItems.forEach(item => {
+                const tickerItem = document.createElement('div');
+                tickerItem.className = 'ticker-item';
+                
+                const label = document.createElement('span');
+                label.className = 'ticker-label';
+                label.textContent = item.type.toUpperCase();
+                
+                const icon = document.createElement('i');
+                icon.className = getIconByType(item.type);
+                
+                const text = document.createElement('span');
+                text.textContent = item.text;
+                
+                tickerItem.appendChild(label);
+                tickerItem.appendChild(icon);
+                tickerItem.appendChild(text);
+                
+                container.appendChild(tickerItem);
+            });
+        }
+
+        function getIconByType(type) {
+            const icons = {
+                'важно': 'fas fa-exclamation-circle',
+                'новость': 'fas fa-newspaper',
+                'напоминание': 'fas fa-bell',
+                'объявление': 'fas fa-bullhorn',
+                'мероприятие': 'fas fa-calendar-alt',
+                'дедлайн': 'fas fa-clock'
+            };
+            return icons[type.toLowerCase()] || 'fas fa-info-circle';
+        }
 
         // Инициализация SignalR соединения
         const connection = new signalR.HubConnectionBuilder()
@@ -370,6 +512,11 @@
                 showNotification(`Расписание обновлено!`);
                 loadSchedule(currentDay);
             }
+        });
+
+        connection.on("ReceiveNewsUpdate", () => {
+            showNotification(`Новые объявления!`);
+            loadTickerNews();
         });
 
         connection.onclose(async () => {
@@ -409,7 +556,6 @@
             }, 3000);
         }
 
-        // Загрузка данных группы
         async function loadGroupInfo() {
             try {
                 const response = await fetch(`${apiBaseUrl}/api/student/group`, {
@@ -434,7 +580,6 @@
             }
         }
 
-        // Загрузка расписания
         async function loadSchedule(day) {
             const container = document.getElementById('lessonsContainer');
             
@@ -469,7 +614,6 @@
             }
         }
 
-        // Отображение занятий
         function renderLessons(lessons) {
             const container = document.getElementById('lessonsContainer');
             
@@ -514,7 +658,6 @@
             });
         }
 
-        // Время пар
         function getLessonTime(lessonNumber) {
             const times = {
                 1: '9:00 - 10:30',
@@ -536,8 +679,8 @@
                 // Загружаем данные
                 await loadGroupInfo();
                 await loadSchedule(currentDay);
+                await loadTickerNews();
                 
-                // Настраиваем обработчики кнопок
                 document.querySelectorAll('.day-btn').forEach(btn => {
                     btn.addEventListener('click', function() {
                         document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
@@ -547,7 +690,6 @@
                     });
                 });
                 
-                // Кнопка выхода
                 document.getElementById('logoutBtn').addEventListener('click', () => {
                     if (confirm('Вы уверены, что хотите выйти?')) {
                         localStorage.removeItem('jwtToken');
@@ -562,7 +704,6 @@
             }
         }
 
-        // Запускаем приложение
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
 </body>
